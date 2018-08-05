@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>D3 | Intro 2</title>
+</head>
+<body>
+	<script type="text/javascript" src="d3.min.js"></script>
+	<script type="text/javascript">
+		let data0 = [
+		        { gpa: 3.42, height: 138 },
+		        { gpa: 3.54, height: 153 },
+		        { gpa: 3.14, height: 148 },
+		        { gpa: 2.76, height: 164 },
+		        { gpa: 2.95, height: 162 },
+		        { gpa: 3.36, height: 143 }
+		]
+
+		let data1 = [
+		    { gpa: 3.15, height: 157 },
+		    { gpa: 3.12, height: 175 },
+		    { gpa: 3.67, height: 167 },
+		    { gpa: 3.85, height: 149 },
+		    { gpa: 2.32, height: 165 },
+		    { gpa: 3.01, height: 171 },
+		    { gpa: 3.54, height: 168 },
+		    { gpa: 2.89, height: 180 },
+		    { gpa: 3.75, height: 153 }
+		]
+
+		let iwidth = 400, iheight = 400;
+		let svg = d3.select("#canvas");
+
+		let margin = {top: 10, right: 10, bottom: 50, left: 50};
+		let width = svg.attr("width", iwidth - margin.left - margin.right);
+		let height = svg.attr("height", iheight - margin.top - margin.bottom);
+
+		let g = svg.append("g")
+			.attr("transform", "translate("+ margin.left + "," + margin.top +")");
+
+		// Scales
+		var x = d3.scaleLinear()
+		    .range([0, width]);
+		var y = d3.scaleLinear()
+		    .range([height, 0]);
+
+		// Axes
+		let xAxisCall = d3.axisBottom(x)
+		let xAxis = g.append("g")
+			.attr("class", "x-axis")
+			.attr("transform", "translate(" + 0 + "," + height + ")")
+			.call(xAxisCall);
+
+		let yAxisCall = d3.axisLeft(y)
+		let yAxis = g.append("g")
+			.attr("class", "y-axis")
+			.call(yAxisCall);
+
+		// Labels
+		xAxis.append("text")
+			.attr("class", "axis-title")
+			.attr("transform", "translate("+ width +", 0)")
+			.attr("y", -6)
+			.text("Grade Point Average");
+
+		yAxis.append("text")
+			.attr("class", "axis-title")
+			.attr("transform", "rotate(-90)")
+			.attr("y", 16)
+			.text("Height / Centimeters");
+
+
+		let flag = true;
+
+		d3.interval(function(){
+			data = flag ? data0 : data1;
+			update(data);
+			flag = !flag;
+		}, 1000)
+
+		update(data0);
+
+		function update(data){
+			// update scales
+			x.domain([d3.min(data, function(d){return d.gpa;}) / 1.05, d3.max(data, function(d){return d.gpa;}) * 1.05])
+			y.domain([d3.min(data, function(d){return d.height;}) / 1.05, d3.max(data, function(d){return d.height;}) * 1.05])
+
+			// update axes
+			xAxis.call(xAxisCall);
+			yAxis.call(yAxisCall);
+
+			//update circles
+			let circles = g.selectAll("circle").data(data);
+
+			circles.exit().remove()
+
+			circles
+				.attr("cx", function(d){return x(d.gpa)})
+				.attr("cy", function(d){return y(d.height)})
+
+			circles.enter()
+				.append("circle")
+					.attr("cx", function(d){return x(d.gpa)})
+					.attr("cy", function(d){return y(d.height)})
+					.attr("r", 5)
+					.attr("fill", "grey");
+		}
+	</script>
+</body>
+</html>
