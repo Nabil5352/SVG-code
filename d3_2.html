@@ -4,7 +4,8 @@
 	<title>D3 | Intro 2</title>
 </head>
 <body>
-	<script type="text/javascript" src="d3.min.js"></script>
+	<svg id="canvas" width="800" height="500"></svg>
+	<script type="text/javascript" src="libs/d3.js"></script>
 	<script type="text/javascript">
 		let data0 = [
 		        { gpa: 3.42, height: 138 },
@@ -31,8 +32,8 @@
 		let svg = d3.select("#canvas");
 
 		let margin = {top: 10, right: 10, bottom: 50, left: 50};
-		let width = svg.attr("width", iwidth - margin.left - margin.right);
-		let height = svg.attr("height", iheight - margin.top - margin.bottom);
+		let width = +svg.attr("width") - margin.left - margin.right;
+		let height = +svg.attr("height") - margin.top - margin.bottom;
 
 		let g = svg.append("g")
 			.attr("transform", "translate("+ margin.left + "," + margin.top +")");
@@ -47,13 +48,11 @@
 		let xAxisCall = d3.axisBottom(x)
 		let xAxis = g.append("g")
 			.attr("class", "x-axis")
-			.attr("transform", "translate(" + 0 + "," + height + ")")
-			.call(xAxisCall);
+			.attr("transform", "translate(" + 0 + "," + height + ")");
 
 		let yAxisCall = d3.axisLeft(y)
 		let yAxis = g.append("g")
-			.attr("class", "y-axis")
-			.call(yAxisCall);
+			.attr("class", "y-axis");
 
 		// Labels
 		xAxis.append("text")
@@ -80,18 +79,25 @@
 		update(data0);
 
 		function update(data){
+			let t = d3.transition().duration(750);
+
 			// update scales
 			x.domain([d3.min(data, function(d){return d.gpa;}) / 1.05, d3.max(data, function(d){return d.gpa;}) * 1.05])
 			y.domain([d3.min(data, function(d){return d.height;}) / 1.05, d3.max(data, function(d){return d.height;}) * 1.05])
 
 			// update axes
-			xAxis.call(xAxisCall);
-			yAxis.call(yAxisCall);
+			xAxis.transition(t).call(xAxisCall);
+			yAxis.transition(t).call(yAxisCall);
 
 			//update circles
 			let circles = g.selectAll("circle").data(data);
 
-			circles.exit().remove()
+			circles
+				.exit()
+				.transition(t)
+				.attr("fill-opacity", 0.1)
+				.attr("cy", y(0))
+				.remove()
 
 			circles
 				.attr("cx", function(d){return x(d.gpa)})
@@ -102,7 +108,11 @@
 					.attr("cx", function(d){return x(d.gpa)})
 					.attr("cy", function(d){return y(d.height)})
 					.attr("r", 5)
-					.attr("fill", "grey");
+					.attr("fill", "grey")
+					.attr("fill-opacity", 0.1)
+				.transition(t)
+					.attr("fill-opacity", 1)
+					.attr("cy", function(d){return y(d.height)})
 		}
 	</script>
 </body>
