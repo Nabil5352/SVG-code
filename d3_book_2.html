@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>D3 | Book 2</title>
+		<script type="text/javascript" src="libs/d3.js"></script>
+		<style type="text/css">
+			svg{
+				border: 1px solid #ccc;
+				padding: 1em;
+			}
+			.axis path,
+			.axis line{
+				stroke: teal;
+				shape-rendering: crispEdges;
+			}
+			.axis text{
+				font-family: Optima, Futura, sans-serif;
+				font-weight: bold;
+				fill: teal;
+			}
+		</style>
+	</head>
+	<body>
+	</body>
+
+	<!-- day 04 -->
+	<script type="text/javascript">
+		const lwidth = 1000, lheight = 500, lpadding = 20;
+
+		let dataset4 = [];
+		let numDataPoints = 50;
+		let formatAsPercentage = d3.format(".1%");
+
+		const xRange = Math.random() * 1000, yRange = Math.random() * 1000;
+		for(let i=0; i<numDataPoints; i++){
+			let newNumber1 = Math.floor(Math.random() * xRange);
+			let newNumber2 = Math.floor(Math.random() * yRange);
+			dataset4.push([newNumber1, newNumber2]);
+		}
+
+		const xMax = d3.max(dataset4, function(d){return d[0];})
+		const yMax = d3.max(dataset4, function(d){return d[1];})
+
+		let xScale = d3.scaleLinear()
+					.domain([0, xMax])
+					.range([lpadding, lwidth - lpadding*2]);
+
+		let yScale = d3.scaleLinear()
+					.domain([0, yMax])
+					.range([lheight - lpadding, lpadding]);
+
+		let rScale = d3.scaleLinear()
+					.domain([0, d3.max(dataset4, function(d){ return d[1]; })])
+					.range([2, 5]);
+
+		//Create SVG element
+		let svg4 = d3.select("body")
+					.append("svg")
+					.attr("width", lwidth)
+					.attr("height", lheight);
+
+				svg4.selectAll("circle")
+					.data(dataset4)
+					.enter()
+					.append("circle")
+					.attr("cx", function(d){ return xScale(d[0]); })
+					.attr("cy", function(d){ return yScale(d[1]); })
+					.attr("r", function(d){ return rScale(d[1]); });
+
+				svg4.selectAll("text")
+				.data(dataset4)
+				.enter()
+				.append("text")
+				.text(function(d){
+					return d[0] +" , "+ d[1]; 
+				})
+				.attr("x", function(d){
+					return xScale(d[0]);
+				})
+				.attr("y", function(d){
+					return yScale(d[1]);
+				})
+				.attr('font-family', 'sans-serif')
+				.attr('font-size', '11px')
+				.attr('fill', 'red');
+
+		// Axis
+		let xAxis = d3.axisBottom()
+					.scale(xScale)
+					.tickFormat(formatAsPercentage);
+
+		let yAxis = d3.axisLeft()
+					.scale(yScale)
+					.tickFormat(formatAsPercentage);
+
+		svg4.append("g")
+			.attr("class", "axis")
+			.attr("transform", "translate(0, "+ (lheight - lpadding) +")")
+			.call(xAxis);
+		svg4.append("g")
+			.attr("class", "axis")
+			.attr("transform", "translate("+ lpadding +", 0)")
+			.call(yAxis);
+
+	</script>
+
+	<!-- day 05 -->
+	<script type="text/javascript">
+		
+		const pWidth = 1000, pheight = 500, pPadding = 40;
+
+		let dataset5 = []; 
+		let pxScale, pyScale, pxAxis, pyAxis;
+
+		let parseTime = d3.timeParse("%m/%d/%y");
+		let formatTime = d3.timeFormat("%e");
+
+		let rowConverter = function(d){
+			return {
+				Date: parseTime(d.Date),
+				Amount: parseInt(d.Amount)
+			};
+		}
+
+		d3.csv("time_scale_data.csv", rowConverter, function(data){
+
+			dataset5.push(data);
+			
+			let startDate = d3.min(dataset5, function(d) { 
+				return d.Date;
+			});
+			let endDate = d3.max(dataset5, function(d){
+				return d.Date;
+			});
+
+			pxScale = d3.scaleTime()
+						.domain([
+							d3.timeDay.offset(startDate, -1),
+							d3.timeDay.offset(endDate, 1)
+						])
+						.range([pPadding, pWidth - pPadding]);
+
+			pyScale = d3.scaleLinear()
+						.domain([0, d3.max(dataset5, function(d){ return d.Amount; })])
+						.range([ pheight - pPadding, pPadding]);
+
+			xAxis = d3.axisBottom()
+						.scale(pxScale)
+						.ticks(9)
+						.tickFormat(formatTime);
+
+			yAxis = d3.axisLeft()
+						.scale(pyScale)
+						.ticks(10);
+
+			const svg5 = d3.select("body")
+							.append("svg")
+							.attr("width", pWidth)
+							.attr("height", pheight);
+
+			svg5.selectAll("line")
+				.data(dataset5)
+				.enter()
+				.append("line")
+				.attr("x1", function(d){
+					return pxScale(d.Date);
+				})
+				.attr("x2", function(d){
+					return xScale(d.Date);
+				})
+				.attr("y1", pheight - pPadding)
+				.attr("y2", function(d){
+					return pyScale(d.Amount);
+				})
+				.attr("stroke", "#ddd")
+				.attr("stroke-width", 1);
+
+			svg5.selectAll("circle")
+				.data(dataset5)
+				.enter()
+				.append("circle")
+				.attr("cx", function(d){
+					return pxScale(d.Date);
+				})
+				.attr("cy", function(d){
+					return pyScale(d.Amount);
+				})
+				.attr("r", 2);
+
+			svg5.append("g")
+				.attr("class", "axis")
+				.attr("transform", "translate(0,"+ (pheight - pPadding) +")")
+				.call(xAxis);
+
+			svg5.append("g")
+				.attr("class", "axis")
+				.attr("transform", "translate("+ pPadding +", 0)")
+				.call(yAxis);
+
+		});
+
+	</script>
+
+</html>
